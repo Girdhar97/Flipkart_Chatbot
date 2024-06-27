@@ -4,20 +4,23 @@ from typing import List
 
 
 class DataConverter:
-    def __init__(self, file_path: str) -> None:
+    def __init__(
+        self,
+        file_path: str,
+        title_col: str = "product_title",
+        review_col: str = "review",
+    ) -> None:
         self.file_path = file_path
+        self.title_col = title_col
+        self.review_col = review_col
 
     def convert(self) -> List[Document]:
-        df = pd.read_csv(self.file_path)[["product_title", "review"]]
-
-        # Drop rows where review is missing or empty
-        df = df.dropna(subset=["review"])
-        df = df[df["review"].str.strip() != ""]
+        df = pd.read_csv(self.file_path)[[self.title_col, self.review_col]]
 
         docs = [
             Document(
-                page_content=row["review"],
-                metadata={"product_name": row["product_title"]},
+                page_content=row[self.review_col],
+                metadata={"product_name": row[self.title_col]},
             )
             for _, row in df.iterrows()
         ]
