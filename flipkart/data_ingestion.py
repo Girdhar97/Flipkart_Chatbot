@@ -8,14 +8,19 @@ from flipkart.config import Config
 
 
 class DataIngestor:
-    def __init__(self, collection_name: str = "flipkart_database") -> None:
+    def __init__(
+        self,
+        data_path: str = "data/flipkart_product_review.csv",
+    ) -> None:
+        self.data_path = data_path
+
         self.embedding = HuggingFaceEndpointEmbeddings(
             model=Config.EMBEDDING_MODEL
         )
 
         self.vstore = AstraDBVectorStore(
             embedding=self.embedding,
-            collection_name=collection_name,
+            collection_name="flipkart_database",
             api_endpoint=Config.ASTRA_DB_API_ENDPOINT,
             token=Config.ASTRA_DB_APPLICATION_TOKEN,
             namespace=Config.ASTRA_DB_KEYSPACE,
@@ -25,7 +30,7 @@ class DataIngestor:
         if load_existing:
             return self.vstore
 
-        docs = DataConverter("data/flipkart_product_review.csv").convert()
+        docs = DataConverter(self.data_path).convert()
         self.vstore.add_documents(docs)
         return self.vstore
 
