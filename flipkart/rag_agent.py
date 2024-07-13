@@ -19,12 +19,15 @@ def build_flipkart_retriever_tool(retriever):
 
 
 class RAGAgentBuilder:
-    def __init__(self, vector_store: Any) -> None:
+    def __init__(self, vector_store: Any, top_k: int = 3) -> None:
         self.vector_store = vector_store
+        self.top_k = top_k
         self.model = init_chat_model(Config.RAG_MODEL)
 
     def build_agent(self) -> Any:
-        retriever = self.vector_store.as_retriever(search_kwargs={"k": 3})
+        retriever = self.vector_store.as_retriever(
+            search_kwargs={"k": self.top_k}
+        )
         flipkart_tool = build_flipkart_retriever_tool(retriever)
 
         agent = create_agent(
@@ -32,11 +35,8 @@ class RAGAgentBuilder:
             tools=[flipkart_tool],
             system_prompt=(
                 "You're an e-commerce bot answering product-related queries "
-                "based on reviews and titles. "
-                "Always use the flipkart_retriever_tool to find answers. "
-                "If you do not know an answer, politely say that you don't "
-                "know and ask the user to contact our customer care "
-                "+97 98652365."
+                "based on reviews and titles. Always use "
+                "flipkart_retriever_tool to retrieve relevant reviews."
             ),
             checkpointer=InMemorySaver(),
             middleware=[
