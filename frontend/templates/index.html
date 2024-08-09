@@ -40,7 +40,6 @@
                     <!-- Footer -->
                     <div class="card-footer">
                         <form id="messageArea" class="input-group">
-                            <!-- Version B: updated placeholder -->
                             <input
                                 type="text"
                                 id="text"
@@ -51,7 +50,6 @@
                                 required
                             />
                             <div class="input-group-append">
-                                <!-- Version B: updated button text -->
                                 <button type="submit" id="send" class="input-group-text send_btn">
                                     <i class="fas fa-paper-plane"></i>&nbsp;Send
                                 </button>
@@ -89,7 +87,19 @@ $(document).ready(function() {
             data: { msg: rawText },
             type: "POST",
             url: "/get",
+            // Version C: show "Bot is thinking..." before response
+            beforeSend: function () {
+                $("#messageFormeight").append(`
+                    <div id="typing-indicator" class="d-flex justify-content-start mb-2">
+                        <div class="msg_cotainer">
+                            Bot is thinking...
+                        </div>
+                    </div>
+                `);
+            }
         }).done(function(data) {
+
+            $("#typing-indicator").remove();
 
             var formattedData = marked.parse(data);
             
