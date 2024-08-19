@@ -62,6 +62,12 @@
     </div>
 
 <script>
+// Auto-scroll to bottom after each new message
+function scrollToBottom() {
+    var chatBody = document.getElementById("messageFormeight");
+    chatBody.scrollTop = chatBody.scrollHeight;
+}
+
 $(document).ready(function() {
     $("#messageArea").on("submit", function(event) {
         const date = new Date();
@@ -82,12 +88,12 @@ $(document).ready(function() {
         
         $("#text").val("");
         $("#messageFormeight").append(userHtml);
+        scrollToBottom();
 
         $.ajax({
             data: { msg: rawText },
             type: "POST",
             url: "/get",
-            // Version C: show "Bot is thinking..." before response
             beforeSend: function () {
                 $("#messageFormeight").append(`
                     <div id="typing-indicator" class="d-flex justify-content-start mb-2">
@@ -96,6 +102,7 @@ $(document).ready(function() {
                         </div>
                     </div>
                 `);
+                scrollToBottom();
             }
         }).done(function(data) {
 
@@ -115,7 +122,9 @@ $(document).ready(function() {
                 </div>
             </div>`;
             $("#messageFormeight").append($.parseHTML(botHtml));
+            scrollToBottom();
         });
+
         event.preventDefault();
     });
 });
