@@ -26,7 +26,10 @@ def index() -> str:
 
 @app.route("/get", methods=["POST"])
 def get_bot_response() -> str:
-    user_msg: str = request.form.get("msg", "")
+    user_msg: str = request.form.get("msg", "").strip()
+
+    if not user_msg:
+        return "Please enter a message so I can help you."
 
     result: Any = agent.invoke({"messages": [("user", user_msg)]})
     bot_reply: str = result["messages"][-1].content
