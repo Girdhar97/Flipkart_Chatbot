@@ -66,7 +66,10 @@ for msg in st.session_state.messages:
 # ---------------------------
 # User Input
 # ---------------------------
-user_input: str = st.chat_input("Ask me about Flipkart products...")
+user_input_raw: str = st.chat_input("Ask me about Flipkart products...")
+
+# Guard: ignore empty / whitespace-only input
+user_input = user_input_raw.strip() if user_input_raw is not None else ""
 
 if user_input:
     st.session_state.request_count += 1
