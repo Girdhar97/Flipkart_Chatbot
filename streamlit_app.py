@@ -24,7 +24,10 @@ st.set_page_config(
 # Sidebar
 # ---------------------------
 st.sidebar.title("🛍️ Flipkart RAG Chatbot")
-st.sidebar.caption("LangChain + LangGraph + Vector DB")
+st.sidebar.caption(
+    "Powered by LangChain, LangGraph and AstraDB vector search.\n"
+    "Use this assistant to explore products using real customer reviews."
+)
 
 if st.sidebar.button("🔄 New Chat"):
     st.session_state.clear()
@@ -54,7 +57,13 @@ rag_agent = load_agent()
 # Main Title
 # ---------------------------
 st.title("🛒 Flipkart AI Assistant")
-st.caption("Ask about products, prices, specifications & comparisons")
+st.caption("Ask about products, prices, specs, comparisons, and reviews.")
+
+# Extra description above chat
+st.write(
+    "Type a question like *“Recommend a phone under 20k with good battery”* "
+    "or *“Which laptop is best for coding and light gaming?”*"
+)
 
 # ---------------------------
 # Display Chat History
