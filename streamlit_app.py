@@ -26,7 +26,7 @@ st.set_page_config(
 st.sidebar.title("🛍️ Flipkart RAG Chatbot")
 st.sidebar.caption(
     "Powered by LangChain, LangGraph and AstraDB vector search.\n"
-    "Use this assistant to explore products using real customer reviews."
+    "Uses Retrieval-Augmented Generation (RAG) over real product reviews."
 )
 
 if st.sidebar.button("🔄 New Chat"):
@@ -57,7 +57,10 @@ rag_agent = load_agent()
 # Main Title
 # ---------------------------
 st.title("🛒 Flipkart AI Assistant")
-st.caption("Ask about products, prices, specs, comparisons, and reviews.")
+st.caption(
+    "RAG-powered chatbot that answers using Flipkart-style product data "
+    "and customer reviews."
+)
 
 # Extra description above chat
 st.write(
