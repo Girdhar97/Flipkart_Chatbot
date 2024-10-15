@@ -38,9 +38,9 @@ if st.sidebar.button("🔄 New Chat"):
 # ---------------------------
 if "thread_id" not in st.session_state:
     st.session_state.thread_id = str(uuid.uuid4())
-    st.session_state.messages: List[Dict[str, str]] = []
-    st.session_state.request_count: int = 0
-    st.session_state.prediction_count: int = 0
+    st.session_state.messages = []  
+    st.session_state.request_count = 0  
+    st.session_state.prediction_count = 0  
 
 # ---------------------------
 # Load Vector Store & Agent (Cached)
