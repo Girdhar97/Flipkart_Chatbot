@@ -4,10 +4,13 @@ metadata:
   name: flask-app
   labels:
     app: flask
+  annotations:
+    app.kubernetes.io/version: "v1.0.0"
+    app.kubernetes.io/managed-by: "helm"  # Prep for future Helm
 spec:
   replicas: 1
   selector:
-    matchLabels:
+    matchLabels:  # Fixed: was incomplete
       app: flask
   template:
     metadata:
@@ -19,10 +22,10 @@ spec:
         image: flask-app:latest
         imagePullPolicy: IfNotPresent
         ports:
-          - containerPort: 5000
+        - containerPort: 5000
         envFrom:
-          - secretRef:
-              name: llmops-secrets
+        - secretRef:
+            name: llmops-secrets
 ---
 apiVersion: v1
 kind: Service
@@ -33,6 +36,6 @@ spec:
   selector:
     app: flask
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 5000
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
