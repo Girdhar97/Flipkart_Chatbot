@@ -39,3 +39,27 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 5000
+---
+      containers:
+      - name: flask-container
+        image: flask-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000  # Match app.py default
+        resources:  # New: Safe defaults for LLM workloads
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+        livenessProbe:  # New: Health check
+          httpGet:
+            path: /
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        envFrom:
+        - secretRef:
+            name: llmops-secrets
+
