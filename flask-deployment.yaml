@@ -1,3 +1,7 @@
+# In Deployment metadata/spec:
+spec:
+  replicas: ${REPLICAS:-1}  # New: Configurable, default 1
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
