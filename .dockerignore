@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+flipkart-env/
+.venv/
+venv/
+
+# Environment & logs
+.env
+*.log
+logs/
+
+# IDE
+.vscode/
