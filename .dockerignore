@@ -18,3 +18,14 @@ logs/
 
 # IDE
 .vscode/
+
+# NEW: Git + OS basics
+.git
+.gitignore
+.DS_Store
+Thumbs.db
+
+# NEW: Data/models (don't bake into image)
+*.csv
+data/
+models/
