@@ -19,13 +19,24 @@ logs/
 # IDE
 .vscode/
 
-# NEW: Git + OS basics
+# Git + OS basics
 .git
 .gitignore
 .DS_Store
 Thumbs.db
 
-# NEW: Data/models (don't bake into image)
+# Data/models (don't bake into image)
 *.csv
 data/
 models/
+
+# Testing artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+tests/__pycache__/
+
+# Temp/user files
+*.tmp
+uploads/
+*.bak
