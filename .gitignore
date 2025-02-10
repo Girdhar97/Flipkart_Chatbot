@@ -1,0 +1,42 @@
+# Byte-compiled / C extensions
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments (MATCHES dockerignore)
+.venv/
+venv/
+flipkart-env/
+flipbotenv/
+env/
+
+# Packaging / distribution
+build/
+dist/
+wheels/
+*.egg-info/
+FLIPKART_RECOMMENDER.egg-info/
+
+# Environment & logs (MATCHES dockerignore)
+.env
+*.env
+logs/
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Testing / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.coverage.*
+
+# OS / Temp
+.DS_Store
+Thumbs.db
+dd/  # Custom dir?
+*.tmp
