@@ -40,3 +40,16 @@ htmlcov/
 Thumbs.db
 dd/  # Custom dir?
 *.tmp
+
+# Data / Models (NEW: Don't commit CSVs/embeddings)
+data/
+*.csv
+models/
+checkpoints/
+
+# Git / Docker (NEW: Build hygiene)
+.git/
+.github/workflows/  # Keep .github/ for CI
+Dockerfile*
+.dockerignore
+.docker/
