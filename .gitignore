@@ -53,3 +53,12 @@ checkpoints/
 Dockerfile*
 .dockerignore
 .docker/
+
+# Testing extras (NEW)
+.tox/
+.nox/
+coverage.xml
+
+# Jupyter / Notebooks (NEW: If prototyping RAG)
+.ipynb_checkpoints/
+*.ipynb_checkpoints
