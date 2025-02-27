@@ -1,0 +1,11 @@
+groups:
+- name: flask.rules
+  rules:
+  - alert: FlaskScrapeFailed
+    expr: up{job="flask-app"} == 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "RAG Flask down on {{ $labels.instance }}"
+      description: "No metrics from 136.119.128.15:5000 (/metrics)"
