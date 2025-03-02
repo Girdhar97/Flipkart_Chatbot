@@ -1,11 +1,42 @@
-groups:
-- name: flask.rules
-  rules:
-  - alert: FlaskScrapeFailed
-    expr: up{job="flask-app"} == 0
-    for: 1m
-    labels:
-      severity: critical
-    annotations:
-      summary: "RAG Flask down on {{ $labels.instance }}"
-      description: "No metrics from 136.119.128.15:5000 (/metrics)"
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      scrape_timeout: 10s  
+
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets: ['alertmanager.monitoring.svc.cluster.local:9093']
+
+    rule_files:
+    - /etc/prometheus/flask-rules.yml
+
+    # NEW: Storage (tune for LLMOps logs)
+    storage:
+      tsdb:
+        retention: 7d
+
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:9090']
+
+      - job_name: 'flask-app'
+        metrics_path: /metrics
+        scrape_timeout: 10s  # NEW: Per-job
+        static_configs:
+          - targets: ['136.119.128.15:5000']  
+        relabel_configs:
+        - target_label: app
+          replacement: flask-rag-chatbot
+        - target_label: component 
+          replacement: rag-retriever
+        - target_label: namespace
+          replacement: default

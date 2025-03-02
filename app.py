@@ -1,3 +1,4 @@
+import os
 from typing import Any
 
 from flask import Flask, render_template, request
@@ -38,5 +39,5 @@ def get_bot_response() -> str:
 
 
 if __name__ == "__main__":
-    port = int(os.getenv("APP_PORT", "8000"))
+    port = int(os.getenv("APP_PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=True)

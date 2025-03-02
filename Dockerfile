@@ -22,8 +22,8 @@ RUN useradd --create-home appuser && chown -R appuser:appuser /app \
     && chown -R appuser:appuser /app
 USER appuser
 
-EXPOSE 8000
+EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+    CMD curl -f http://localhost:5000/ || exit 1
 
 CMD ["python", "app.py"]
