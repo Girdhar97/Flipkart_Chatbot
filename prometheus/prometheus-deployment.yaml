@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+      annotations:
+        prometheus.io/scrape: "true"  # NEW: Self-monitor
+        prometheus.io/port: "9090"
+    spec:
+      securityContext:  # NEW: Security best practices
+        runAsNonRoot: true
+        runAsUser: 65534  # nobody
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.54.0  # Pin version
+        args:
+          - "--config.file=/etc/prometheus/prometheus.yml"
+          - "--storage.tsdb.path=/prometheus"  # NEW: Explicit TSDB
+          - "--web.console.libraries=/etc/prometheus/console_libraries"
+          - "--web.console.templates=/etc/prometheus/consoles"
+        ports:
+        - containerPort: 9090
+        resources:  # NEW: Limits for stability
+          requests:
+            cpu: "100m"
+            memory: "400Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+        volumeMounts:
+        - name: config-volume
+          mountPath: /etc/prometheus
+        - name: rules-volume  # NEW: Flask rules mount
+          mountPath: /etc/prometheus/flask-rules.yml
+          subPath: flask-rules.yml
+        - name: prometheus-storage  # NEW: Persistent TSDB
+          mountPath: /prometheus
+      volumes:
+      - name: config-volume
+        configMap:
+          name: prometheus-config
+          defaultMode: 0644
+      - name: rules-volume  # NEW: Rules ConfigMap
+        configMap:
+          name: flask-rules-cm  # Create below
+          defaultMode: 0644
+      - name: prometheus-storage
+        emptyDir: {}  # Prod: Use PVC
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: monitoring
+  labels:
+    app: prometheus
+spec:
+  selector:
+    app: prometheus
+  ports:
+  - protocol: TCP
+    port: 9090
+    targetPort: 9090
+    nodePort: 32001
+  type: NodePort
