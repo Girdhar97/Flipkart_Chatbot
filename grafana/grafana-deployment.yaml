@@ -3,33 +3,79 @@ kind: Deployment
 metadata:
   name: grafana
   namespace: monitoring
+  labels:
+    app: grafana
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: grafana  
+      app: grafana
   template:
     metadata:
       labels:
         app: grafana
+      annotations:
+        prometheus.io/scrape: "true"  # NEW: Self-monitor Grafana
+        prometheus.io/port: "3000"
     spec:
+      securityContext:  # NEW: Security
+        runAsUser: 472  # Grafana UID
+        fsGroup: 472
+        runAsNonRoot: true
       containers:
-        - name: grafana
-          image: grafana/grafana
-          ports:
-            - containerPort: 3000
+      - name: grafana
+        image: grafana/grafana:11.1.0  # Pin secure version
+        ports:
+        - containerPort: 3000
+        resources:  # NEW: Balanced for dashboards
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "300m"
+            memory: "512Mi"
+        env:  # NEW: Admin setup
+        - name: GF_SECURITY_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: grafana-admin-secret
+              key: admin-user
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-admin-secret
+              key: admin-password
+        volumeMounts:  # NEW: Provisioning + persistence
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+        - name: datasource-config
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: dashboard-provider
+          mountPath: /etc/grafana/provisioning/dashboards
+      volumes:  # NEW: Volumes
+      - name: grafana-storage
+        persistentVolumeClaim:
+          claimName: grafana-pvc  # Create below
+      - name: datasource-config
+        configMap:
+          name: grafana-datasources-cm
+      - name: dashboard-provider
+        configMap:
+          name: grafana-dashboards-cm
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: grafana-service
   namespace: monitoring
+  labels:
+    app: grafana
 spec:
   selector:
     app: grafana
   ports:
-    - protocol: TCP
-      port: 3000
-      targetPort: 3000
-      nodePort: 32000  
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
+    nodePort: 32000
   type: NodePort
