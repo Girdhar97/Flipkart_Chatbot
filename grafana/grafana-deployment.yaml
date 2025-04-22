@@ -5,6 +5,8 @@ metadata:
   namespace: monitoring
   labels:
     app: grafana
+  annotations:
+    description: "Grafana monitoring dashboard for RAG chatbot"
 spec:
   replicas: 1
   selector:
@@ -15,26 +17,39 @@ spec:
       labels:
         app: grafana
       annotations:
-        prometheus.io/scrape: "true"  # NEW: Self-monitor Grafana
+        prometheus.io/scrape: "true"
         prometheus.io/port: "3000"
+        sidecar.istio.io/inject: "false"  # Avoid service mesh conflicts
     spec:
-      securityContext:  # NEW: Security
-        runAsUser: 472  # Grafana UID
+      securityContext:
+        runAsUser: 472
         fsGroup: 472
         runAsNonRoot: true
+      initContainers:  # ADDED: Pre-check dependencies
+      - name: check-prometheus
+        image: curlimages/curl:7.87.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          until curl -f http://prometheus-service.monitoring.svc.cluster.local:9090/-/ready; do
+            echo "Waiting for Prometheus..."
+            sleep 5
+          done
+        timeoutSeconds: 300
       containers:
       - name: grafana
-        image: grafana/grafana:11.1.0  # Pin secure version
+        image: grafana/grafana:11.1.0
         ports:
         - containerPort: 3000
-        resources:  # NEW: Balanced for dashboards
+        resources:
           requests:
             cpu: "100m"
             memory: "256Mi"
           limits:
             cpu: "300m"
             memory: "512Mi"
-        env:  # NEW: Admin setup
+        env:
         - name: GF_SECURITY_ADMIN_USER
           valueFrom:
             secretKeyRef:
@@ -45,23 +60,55 @@ spec:
             secretKeyRef:
               name: grafana-admin-secret
               key: admin-password
-        volumeMounts:  # NEW: Provisioning + persistence
+        - name: GF_LOG_LEVEL  # ADDED: Structured logging
+          value: "info"
+        volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
         - name: datasource-config
           mountPath: /etc/grafana/provisioning/datasources
         - name: dashboard-provider
           mountPath: /etc/grafana/provisioning/dashboards
-      volumes:  # NEW: Volumes
+        livenessProbe:  # ADDED: Health checks
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 60
+          timeoutSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+      - name: log-collector  # ADDED: Fluent Bit logging sidecar
+        image: fluent/fluent-bit:3.1.6-debug
+        env:
+        - name: FLUENT_BIT_CONFIG
+          value: |
+            [SERVICE]
+                Flush        1
+                Log_Level    info
+            [INPUT]
+                Name tail
+                Path /var/log/grafana/grafana.log
+                Tag grafana.*
+            [OUTPUT]
+                Name stdout
+        volumeMounts:
+        - name: grafana-logs
+          mountPath: /var/log/grafana
+      volumes:
       - name: grafana-storage
         persistentVolumeClaim:
-          claimName: grafana-pvc  # Create below
+          claimName: grafana-pvc
       - name: datasource-config
         configMap:
           name: grafana-datasources-cm
       - name: dashboard-provider
         configMap:
           name: grafana-dashboards-cm
+      - name: grafana-logs  # ADDED: Shared logs volume
+        emptyDir: {}
 ---
 apiVersion: v1
 kind: Service
