@@ -1,4 +1,4 @@
-## Builder stage (NEW)
+## Builder stage
 FROM python:3.11 AS builder
 WORKDIR /app
 COPY requirements.txt .
@@ -12,7 +12,7 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 
-## Copy wheels/runtime from builder (NEW: slim image)
+## Copy wheels/runtime from builder (slim image)
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
@@ -23,7 +23,10 @@ RUN useradd --create-home appuser && chown -R appuser:appuser /app \
 USER appuser
 
 EXPOSE 5000
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/ || exit 1
 
-CMD ["python", "app.py"]
+# Healthcheck with logging
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
+
+# CMD with logging setup
+CMD ["/bin/bash", "-c", "echo 'Starting RAG Chatbot container...' && python app.py"]
