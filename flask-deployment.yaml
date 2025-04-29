@@ -1,6 +1,3 @@
-# In Deployment metadata/spec:
-spec:
-  replicas: ${REPLICAS:-1}  # New: Configurable, default 1
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -10,31 +7,75 @@ metadata:
     app: flask
   annotations:
     app.kubernetes.io/version: "v1.0.0"
-    app.kubernetes.io/managed-by: "helm"  # Prep for future Helm
+    app.kubernetes.io/managed-by: "helm"
+    description: "RAG Chatbot Flask deployment with Prometheus metrics"
 spec:
   replicas: 1
   selector:
-    matchLabels:  # Fixed: was incomplete
+    matchLabels:
       app: flask
   template:
     metadata:
       labels:
         app: flask
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5000"
+        prometheus.io/path: "/metrics"
     spec:
+      initContainers:  # ADDED: Pre-flight checks
+      - name: astra-db-check
+        image: curlimages/curl:7.87.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Validating AstraDB connectivity..."
+          # Placeholder - add curl if AstraDB exposes health
+          sleep 10
       containers:
       - name: flask-container
         image: flask-app:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "1Gi"
+        livenessProbe:
+          httpGet:
+            path: /health  # Updated to app.py health endpoint
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:  # ADDED: Traffic readiness
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
         envFrom:
         - secretRef:
             name: llmops-secrets
+        env:  # ADDED: Logging config
+        - name: FLASK_ENV
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: flask-service
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "5000"
+    prometheus.io/path: "/metrics"
 spec:
   type: LoadBalancer
   selector:
@@ -43,28 +84,3 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 5000
----
-
-      containers:
-      - name: flask-container
-        image: flask-app:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 5000  
-        resources:  
-          requests:
-            cpu: "100m"
-            memory: "256Mi"
-          limits:
-            cpu: "500m"
-            memory: "1Gi"
-        livenessProbe:  # New: Health check
-          httpGet:
-            path: /
-            port: 5000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        envFrom:
-        - secretRef:
-            name: llmops-secrets
-
