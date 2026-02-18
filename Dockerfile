@@ -24,8 +24,17 @@ RUN pip install --no-cache-dir --upgrade pip \
 ## Copy app contents
 COPY . .
 
-# Used PORTS (FIX: match app.py)
+## Create non-root user (NEW: security)
+RUN useradd --create-home appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+# Used PORTS
 EXPOSE 8000
+
+## Healthcheck (NEW: for K8s liveness)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/ || exit 1
 
 # Run the app 
 CMD ["python", "app.py"]
